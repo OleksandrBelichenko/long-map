@@ -441,7 +441,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      *
      * @param value1 first value to compare
      * @param value2 second value to compare
-     * @return true if values are equals
+     * @return true if values are equal
      */
     private boolean isEqualValues(V value1, V value2){
         if (value1 == null && value2 == null) {
