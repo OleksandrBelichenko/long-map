@@ -21,8 +21,14 @@ public class Main {
         runtime.gc();
         long memBefore = runtime.totalMemory() - runtime.freeMemory();
         LongMap<String> longMap = new LongMapImpl<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             longMap.put(i, "" + i);
+        }
+        for (int i = 0; i < 10000; i++) {
+            longMap.get(i);
+        }
+        for (int i = 0; i < 10000; i++) {
+            longMap.remove(i);
         }
         long memAfter = runtime.totalMemory() - runtime.freeMemory();
         long longMapMem = memAfter - memBefore;
@@ -30,8 +36,14 @@ public class Main {
         Runtime.getRuntime().gc();
         memBefore = runtime.totalMemory() - runtime.freeMemory();
         HashMap<Long, String> hashMap = new HashMap<>();
-        for (Long i = 0L; i < 100L; i++) {
+        for (Long i = 0L; i < 10000L; i++) {
             hashMap.put(i, "" + i);
+        }
+        for (Long i = 0L; i < 10000L; i++) {
+            hashMap.get(i);
+        }
+        for (Long i = 0L; i < 10000L; i++) {
+            hashMap.remove(i);
         }
         memAfter = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         long hashMapMem = memAfter - memBefore;
@@ -45,13 +57,13 @@ public class Main {
     private static void perfomance(DecimalFormat decimalFormat) {
         long timeBefore = System.nanoTime();
         LongMap<String> longMap = new LongMapImpl<>();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             longMap.put(i, "" + i);
         }
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             longMap.get(i);
         }
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             longMap.remove(i);
         }
 
@@ -61,13 +73,13 @@ public class Main {
 
         timeBefore = System.nanoTime();
         HashMap<Long, String> hashMap = new HashMap<>();
-        for (Long i = 0L; i < 100L; i++) {
+        for (Long i = 0L; i < 10000L; i++) {
             hashMap.put(i, "" + i);
         }
-        for (Long i = 0L; i < 100L; i++) {
+        for (Long i = 0L; i < 10000L; i++) {
             hashMap.get(i);
         }
-        for (Long i = 0L; i < 100L; i++) {
+        for (Long i = 0L; i < 10000L; i++) {
             hashMap.remove(i);
         }
         timeAfter = System.nanoTime();

@@ -1,10 +1,7 @@
 package de.comparus.opensource.longmap;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LongMapImpl<V> implements LongMap<V> {
@@ -189,10 +186,6 @@ public class LongMapImpl<V> implements LongMap<V> {
     public V get(long key) {
         int index = hash(key);
 
-        if (index >= currentNodes.length) {
-            throw new ArrayIndexOutOfBoundsException("Bucket with this index does not exist");
-        }
-
         if (currentNodes[index] != null) {
             List<Node<V>> nodes = currentNodes[index].getNodes();
             for (Node<V> node : nodes) {
@@ -234,7 +227,7 @@ public class LongMapImpl<V> implements LongMap<V> {
                 return value;
             }
         }
-        return null;
+        return value;
     }
 
     /**
@@ -255,7 +248,7 @@ public class LongMapImpl<V> implements LongMap<V> {
     public boolean containsKey(long key) {
         int index = hash(key);
 
-        if (currentNodes[index] != null) {
+        if (Objects.nonNull(currentNodes[index])) {
             List<Node<V>> nodes = currentNodes[index].getNodes();
             for (Node<V> node : nodes) {
                 if (key == node.getKey()) {
@@ -273,14 +266,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      * @return true if this map maps one or more keys to the specified value
      */
     public boolean containsValue(V value) {
-        List<Node<V>> nodes = getAllNodes();
-
-        for (Node<V> node : nodes) {
-            if (value.equals(node.getValue())) {
-                return true;
-            }
-        }
-        return false;
+        return getAllNodes().stream().anyMatch(val -> isEqualValues(value, val.getValue()));
     }
 
     /**
@@ -289,14 +275,8 @@ public class LongMapImpl<V> implements LongMap<V> {
      * @return array of keys
      */
     public long[] keys() {
-        List<Long> keys = new ArrayList<>();
+        List<Long> keys = getAllNodes().stream().map(Node::getKey).collect(Collectors.toList());
 
-        List<Node<V>> nodes = getAllNodes();
-        for (Node<V> node : nodes) {
-            keys.add(node.getKey());
-        }
-
-        keys = keys.stream().distinct().collect(Collectors.toList());
         long[] keySet = new long[keys.size()];
 
         for (int i = 0; i < keys.size(); i++) {
@@ -316,18 +296,13 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @SuppressWarnings("unchecked")
     public V[] values() {
-        List<V> values = new ArrayList<>();
+        List<V> values = getAllNodes().stream().map(Node::getValue).collect(Collectors.toList());
+        Optional<V> genericClass = values.stream().filter(Objects::nonNull).findAny();
 
-        List<Node<V>> nodes = getAllNodes();
-        for (Node<V> node : nodes) {
-            values.add(node.getValue());
-        }
-
-        if (values.isEmpty()) {
+        if (values.isEmpty() || !genericClass.isPresent()) {
             return null;
         }
-
-        V[] valuesSet = (V[]) Array.newInstance(values.get(0).getClass(), values.size());
+        V[] valuesSet = (V[]) Array.newInstance(genericClass.get().getClass(), values.size());
 
         return values.toArray(valuesSet);
     }
@@ -347,7 +322,9 @@ public class LongMapImpl<V> implements LongMap<V> {
     @SuppressWarnings("unchecked")
     public void clear() {
         size = 0;
-        currentNodes = new Node[currentNodes.length];
+        for (int i = 0; i < currentNodes.length; i++){
+            currentNodes[i] = null;
+        }
     }
 
     /* ---------------- Utils Methods ---------------- */
@@ -390,20 +367,11 @@ public class LongMapImpl<V> implements LongMap<V> {
 
         List<Node<V>> multiValueNodes = currentNodes[index].getNodes();
 
-        boolean isEqualsValues;
-
         for (Node<V> oneValue : multiValueNodes) {
 
-            if (oneValue.getValue() == null && node.getValue() == null) {
-                isEqualsValues = true;
-            } else if (oneValue.getValue() == null || node.getValue() == null) {
-                isEqualsValues = false;
-            } else {
-                isEqualsValues = oneValue.getValue().equals(node.getValue());
-            }
+            boolean isEqualValues = isEqualValues(oneValue.getValue(), node.getValue());
 
-
-            if ((oneValue.getKey() == node.getKey()) && !isEqualsValues) {
+            if ((oneValue.getKey() == node.getKey()) && !isEqualValues) {
                 answer = oneValue.getValue();
                 oneValue.setValue(node.getValue());
             }
@@ -422,7 +390,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      *
      * @param index index of the bucket in which we need to add new node
      * @param node  entity of node which we need to add
-     * @return value of this node
+     * @return null
      */
     private V add(int index, Node<V> node) {
         currentNodes[index] = new Node<>(node.key, node.value);
@@ -459,11 +427,29 @@ public class LongMapImpl<V> implements LongMap<V> {
     private List<Node<V>> getAllNodes() {
         List<Node<V>> nodes = new LinkedList<>();
 
-        for (int i = 0; i < currentNodes.length; i++) {
-            if (currentNodes[i] != null) {
-                nodes.addAll(currentNodes[i].getNodes());
+        for (Node<V> currentNode : currentNodes) {
+            if (currentNode != null) {
+                nodes.addAll(currentNode.getNodes());
             }
         }
         return nodes;
+    }
+
+    /**
+     * Comparing two values for equality with avoiding NullPointerException
+     * because value can be equal to null
+     *
+     * @param value1 first value to compare
+     * @param value2 second value to compare
+     * @return true if values are equals
+     */
+    private boolean isEqualValues(V value1, V value2){
+        if (value1 == null && value2 == null) {
+            return true;
+        } else if (value1 == null || value2 == null) {
+            return false;
+        } else {
+            return value1.equals(value2);
+        }
     }
 }
