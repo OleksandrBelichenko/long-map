@@ -190,8 +190,8 @@ public class LongMapImplTest {
         Runtime.getRuntime().gc();
         memBefore = runtime.totalMemory() - runtime.freeMemory();
         HashMap<Long, String> hashMap = new HashMap<>();
-        for (int i = 0; i < 100; i++) {
-            hashMap.put(Long.valueOf(i), "" + i);
+        for (Long i = 0L; i < 100L; i++) {
+            hashMap.put(i, "" + i);
         }
         memAfter = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         long hashMapMem = memAfter - memBefore;
